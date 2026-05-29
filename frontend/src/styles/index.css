@@ -1,0 +1,249 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Remachine+Script&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --page-bg-opacity: 0.12;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html.login-route,
+html.login-route body {
+  overflow: hidden;
+  height: 100dvh;
+  max-height: 100dvh;
+  overscroll-behavior: none;
+}
+
+body {
+  @apply font-sans text-slate-950 antialiased;
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(circle at 18% 12%, rgba(59, 130, 246, 0.08), transparent 24%),
+    radial-gradient(circle at 92% 10%, rgba(14, 165, 233, 0.06), transparent 20%),
+    radial-gradient(circle at 50% 110%, rgba(248, 250, 252, 0.18), transparent 40%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  transition: background 0.2s ease;
+}
+
+.font-display {
+  font-family: 'Playfair Display', serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(255, 107, 107, 0.28);
+  color: #111827;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle at top left, rgba(255, 255, 255, 0.35), transparent 20%), radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.22), transparent 18%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-text {
+  background-size: 300% 300%;
+  animation: gradientShift 9s ease infinite;
+}
+
+.font-remachine {
+  font-family: 'Remachine Script', cursive;
+}
+
+.heading-3d {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.celebration-animate {
+  display: inline-block;
+  transform-style: preserve-3d;
+  background-size: 250% 250%;
+  animation: celebrationPulse3D 3.6s ease-in-out infinite, celebrationColorShift 2s ease-in-out infinite alternate;
+}
+
+.celebration-reveal {
+  display: inline-block;
+  transform: translateX(-100%);
+  opacity: 0;
+  animation: revealLine 0.9s ease forwards;
+}
+
+.line-1 {
+  animation-delay: 0.3s;
+}
+
+.line-2 {
+  animation-delay: 1.0s;
+}
+
+@keyframes revealLine {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.love-purity-3d {
+  display: inline-block;
+  transform-style: preserve-3d;
+  transform: perspective(900px) rotateX(5deg) rotateY(-4deg) translateZ(0);
+  text-shadow: 0 18px 34px rgba(15, 23, 42, 0.18), 0 10px 22px rgba(15, 23, 42, 0.10);
+}
+
+.love-purity-animate {
+  animation: lovePurityFloat 4.2s ease-in-out infinite;
+}
+
+@keyframes celebrationPulse3D {
+  0%, 100% {
+    transform: perspective(1200px) rotateX(2deg) rotateY(-5deg) translateZ(0) translateY(0) scale(1);
+    filter: brightness(1);
+  }
+  35% {
+    transform: perspective(1200px) rotateX(6deg) rotateY(-2deg) translateZ(10px) translateY(-10px) scale(1.03);
+    filter: brightness(1.08);
+  }
+  70% {
+    transform: perspective(1200px) rotateX(3deg) rotateY(-6deg) translateZ(4px) translateY(-4px) scale(1.01);
+    filter: brightness(1);
+  }
+}
+
+@keyframes celebrationColorShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes lovePurityFloat {
+  0%, 100% {
+    transform: perspective(900px) rotateX(5deg) rotateY(-4deg) translateY(0);
+  }
+  50% {
+    transform: perspective(900px) rotateX(7deg) rotateY(-2deg) translateY(-6px);
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+}
+
+p, input, textarea, button, label {
+  letter-spacing: 0.01em;
+}
+
+/* —— Admin panel —— */
+.admin-shell {
+  background: #f4f6fb;
+}
+
+.admin-shell-dark {
+  background: #0b1120;
+}
+
+.admin-page-bg {
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(251, 146, 60, 0.14), transparent 32%),
+    radial-gradient(circle at 88% 4%, rgba(56, 189, 248, 0.1), transparent 28%),
+    radial-gradient(circle at 50% 100%, rgba(248, 250, 252, 0.9), transparent 45%);
+}
+
+.admin-shell-dark .admin-page-bg {
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(251, 146, 60, 0.08), transparent 32%),
+    radial-gradient(circle at 88% 4%, rgba(56, 189, 248, 0.06), transparent 28%);
+}
+
+.admin-sidebar {
+  background: linear-gradient(165deg, #0f172a 0%, #1e293b 48%, #0f172a 100%);
+}
+
+.admin-sidebar-mesh {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(251, 146, 60, 0.15), transparent 40%),
+    radial-gradient(circle at 80% 60%, rgba(251, 191, 36, 0.08), transparent 35%);
+  animation: adminMeshFloat 12s ease-in-out infinite;
+}
+
+@keyframes adminMeshFloat {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+.admin-card {
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.admin-card:hover {
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+
+.admin-shell-dark .admin-card {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: rgba(51, 65, 85, 0.6);
+  color: #f1f5f9;
+}
+
+.admin-shell-dark .admin-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.admin-chart-placeholder {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(255, 237, 213, 0.35) 100%);
+  border: 1px dashed rgba(251, 146, 60, 0.25);
+}
+
+.admin-shell-dark .admin-chart-placeholder {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-sidebar-mesh {
+    animation: none;
+  }
+}
