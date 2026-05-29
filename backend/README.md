@@ -5,7 +5,7 @@ Backend API for the ShopSweet SaaS platform.
 ## Setup
 
 1. Copy `.env.example` to `.env` and update your MySQL credentials.
-2. Configure `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT`, and `JWT_SECRET`.
+2. Configure ``, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT`, and `JWT_SECRET`.
 4. Configure SMTP settings to send real contact emails using Gmail:
    - `SMTP_HOST=smtp.gmail.com`
    - `SMTP_PORT=465`
