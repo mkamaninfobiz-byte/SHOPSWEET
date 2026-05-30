@@ -30,8 +30,17 @@ const requireAdmin = async (req, res, next) => {
   }
   console.log('Database User:', user);
 
-  // Check the role from the decoded JWT payload
+  // Prefer the persisted role from the database if available; otherwise fall back to JWT payload.
   const jwtRole = req.user?.role;
+  const dbRole = user?.role;
+
+  if (dbRole) {
+    if (dbRole !== 'Admin') {
+      return res.status(403).json({ error: 'Admin access required.' });
+    }
+    return next();
+  }
+
   if (jwtRole !== 'Admin') {
     return res.status(403).json({ error: 'Admin access required.' });
   }

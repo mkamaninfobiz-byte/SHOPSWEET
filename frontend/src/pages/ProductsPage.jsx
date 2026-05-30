@@ -14,7 +14,7 @@ import PageBackNav from '../components/PageBackNav';
 const defaultSweetImage = 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80';
 
 const ProductsPage = ({ user, dashboardMode = false }) => {
-  const isAdmin = user?.roles?.includes('Admin');
+  const isAdmin = user?.role === 'Admin' || user?.roles?.includes?.('Admin');
   const isPublic = !dashboardMode;
   const navigate = useNavigate();
   const { products, setProducts, loading, error, reload, hasProducts, isConnectionError } = useProductCatalog();

@@ -16,20 +16,20 @@ export const isValidImageUrl = (value) => {
 export const getProductImageUrl = (item) => {
   const imageUrl = String(item?.image_url || item?.image || item?.imageUrl || '').trim();
   if (!imageUrl) return defaultSweetImage;
+  const imageKey = item?.updated_at || item?.updatedAt || item?.id || Math.random().toString(36).substr(2, 9);
+
+  const appendCacheBuster = (url) => {
+    if (!url.includes('/uploads/')) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${encodeURIComponent(imageKey)}`;
+  };
+
   if (isValidImageUrl(imageUrl)) {
-    // For backend /uploads URLs, add cache-busting query param using product ID
-    if (imageUrl.includes('/uploads/')) {
-      const separator = imageUrl.includes('?') ? '&' : '?';
-      return `${imageUrl}${separator}v=${item?.id || Math.random().toString(36).substr(2, 9)}`;
-    }
-    return imageUrl;
+    return appendCacheBuster(imageUrl);
   }
+
   const resolved = resolveAssetUrl(imageUrl);
-  if (resolved && resolved.includes('/uploads/')) {
-    const separator = resolved.includes('?') ? '&' : '?';
-    return `${resolved}${separator}v=${item?.id || Math.random().toString(36).substr(2, 9)}`;
-  }
-  return resolved || defaultSweetImage;
+  return appendCacheBuster(resolved || defaultSweetImage);
 };
 
 export const getProductStatus = (item) => {

@@ -50,11 +50,13 @@ const initProductsTable = async () => {
       inventory INTEGER NOT NULL DEFAULT 0,
       description TEXT,
       image_url VARCHAR(511) DEFAULT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
   await pool.query(sql);
   await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url VARCHAR(511) DEFAULT NULL`);
+  await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`);
 };
 
 const seedDefaultProductsIfEmpty = async () => {
@@ -89,7 +91,7 @@ const ensureProductsReady = async () => {
 const getAllProducts = async () => {
   await ensureProductsReady();
   const result = await pool.query(
-    'SELECT id, sku, name, category, price, inventory, description, image_url FROM products ORDER BY created_at DESC'
+    'SELECT id, sku, name, category, price, inventory, description, image_url, updated_at FROM products ORDER BY created_at DESC'
   );
   return result.rows;
 };
@@ -97,7 +99,7 @@ const getAllProducts = async () => {
 const getProductById = async (id) => {
   await ensureProductsReady();
   const result = await pool.query(
-    'SELECT id, sku, name, category, price, inventory, description, image_url FROM products WHERE id = $1',
+    'SELECT id, sku, name, category, price, inventory, description, image_url, updated_at FROM products WHERE id = $1',
     [id]
   );
   return result.rows.length ? result.rows[0] : null;
@@ -137,6 +139,7 @@ const updateProductById = async (id, { name, category, price, inventory, descrip
     return getProductById(id);
   }
 
+  fields.push('updated_at = CURRENT_TIMESTAMP');
   values.push(id);
   await pool.query(`UPDATE products SET ${fields.join(', ')} WHERE id = $${index}`, values);
   return getProductById(id);
@@ -152,7 +155,7 @@ const addProduct = async ({ name, category, price, inventory, description, image
   const result = await pool.query(
     `INSERT INTO products (sku, name, category, price, inventory, description, image_url)
      VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING id, sku, name, category, price, inventory, description, image_url`,
+     RETURNING id, sku, name, category, price, inventory, description, image_url, updated_at`,
     [
       sku,
       name,
