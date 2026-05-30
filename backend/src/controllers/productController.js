@@ -3,6 +3,7 @@ const { getAllProducts, getProductById, addProduct, updateProductById, deletePro
 const fetchProducts = async (req, res, next) => {
   try {
     const products = await getAllProducts();
+    console.log(`[API] GET /api/products — returning ${products.length} products`);
     res.json(products);
   } catch (error) {
     next(error);
@@ -53,6 +54,17 @@ const updateProduct = async (req, res, next) => {
     const imageValue = image_url || imageUrl;
     const inventoryValue = inventory ?? stock;
 
+    console.log(`[API] PUT /api/products/${id} — received request:`, {
+      name: name ? `"${name.substring(0, 30)}..."` : 'not provided',
+      category,
+      price,
+      inventory: inventoryValue,
+      description: description ? `"${description.substring(0, 30)}..."` : 'not provided',
+      image_url_from_request: image_url ? `"${image_url.substring(0, 50)}..."` : 'not provided',
+      imageUrl_from_request: imageUrl ? `"${imageUrl.substring(0, 50)}..."` : 'not provided',
+      final_image_value: imageValue ? `"${imageValue.substring(0, 50)}..."` : 'not provided',
+    });
+
     if (name == null && category == null && price == null && inventoryValue == null && description == null && imageValue == null) {
       return res.status(400).json({ error: 'At least one field must be provided.' });
     }
@@ -70,8 +82,15 @@ const updateProduct = async (req, res, next) => {
       return res.status(404).json({ error: 'Product not found.' });
     }
 
+    console.log(`[API] PUT /api/products/${id} — saved product:`, {
+      id: updatedProduct.id,
+      name: updatedProduct.name,
+      image_url: updatedProduct.image_url ? `"${updatedProduct.image_url.substring(0, 50)}..."` : 'null',
+    });
+
     res.json(updatedProduct);
   } catch (error) {
+    console.error(`[API] PUT /api/products/${id} — error:`, error.message);
     next(error);
   }
 };

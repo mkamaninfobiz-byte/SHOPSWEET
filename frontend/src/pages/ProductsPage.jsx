@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { createProduct } from '../api/products';
+import { createProduct, updateProduct } from '../api/products';
 import { useProductCatalog } from '../hooks/useProductCatalog';
 import {
   filterCatalogProducts,
@@ -85,7 +85,7 @@ const ProductsPage = ({ user, dashboardMode = false }) => {
     if (editingProduct?.id === product.id) setEditingProduct(null);
   };
 
-  const handleUpdateProduct = (event) => {
+  const handleUpdateProduct = async (event) => {
     event.preventDefault();
     if (!editingProduct) return;
     if (!editValues.name || !editValues.price) {
@@ -93,22 +93,39 @@ const ProductsPage = ({ user, dashboardMode = false }) => {
       return;
     }
 
-    setProducts((prev) =>
-      prev.map((item) =>
-        item.id === editingProduct.id
-          ? {
-              ...item,
-              ...editValues,
-              price: Number(editValues.price),
-              stock: Number(editValues.stock),
-              image_url: getProductImageUrl(editValues),
-              status: getProductStatus({ ...item, ...editValues }),
-            }
-          : item
-      )
-    );
-    setEditingProduct(null);
-    setFormError('');
+    try {
+      console.log(`[UI] Updating product ${editingProduct.id}...`);
+      const updatedProduct = await updateProduct(editingProduct.id, {
+        name: editValues.name,
+        category: editValues.category,
+        price: Number(editValues.price),
+        stock: Number(editValues.stock),
+        image_url: editValues.image_url,
+        description: editValues.description,
+      });
+
+      console.log(`[UI] Update successful, received response:`, updatedProduct);
+
+      // Update local state with actual API response
+      setProducts((prev) =>
+        prev.map((item) =>
+          item.id === editingProduct.id
+            ? {
+                ...item,
+                ...updatedProduct,
+                status: getProductStatus(updatedProduct),
+              }
+            : item
+        )
+      );
+
+      setEditingProduct(null);
+      setFormError('');
+      console.log(`[UI] Product ${editingProduct.id} updated successfully`);
+    } catch (error) {
+      console.error(`[UI] Failed to update product:`, error);
+      setFormError(`Failed to update product: ${error.message}`);
+    }
   };
 
   const handleAddProduct = async (event) => {
