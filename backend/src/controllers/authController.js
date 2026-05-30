@@ -104,7 +104,7 @@ const updateProfile = async (req, res) => {
     passwordHash,
   });
 
-  const token = signToken({ id: updated.id, email: updated.email, roles: updated.roles });
+  const token = signToken({ id: updated.id, email: updated.email, role: updated.role });
   res.json({ token, user: toPublicUser(updated) });
 };
 

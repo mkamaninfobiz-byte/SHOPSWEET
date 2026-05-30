@@ -8,14 +8,14 @@ const defaultAdminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@shopsweet.lo
 const defaultAdminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'Admin123!';
 
 const seedAdminUser = () => {
-  if (!users.some((user) => user.roles?.includes('Admin'))) {
+  if (!users.some((user) => user.role === 'Admin')) {
     const passwordHash = bcrypt.hashSync(defaultAdminPassword, 10);
     users.push({
       id: 'U-ADMIN',
       name: 'Admin',
       email: defaultAdminEmail,
       passwordHash,
-      roles: ['Admin'],
+      role: 'Admin',
     });
     console.log(`Seeded default admin account: ${defaultAdminEmail}`);
   }
