@@ -22,6 +22,14 @@ const initUsersTable = async () => {
     );
   `;
   await pool.query(sql);
+
+  // Ensure role column exists for older databases that may be missing it
+  try {
+    await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Customer'");
+  } catch (err) {
+    // log and continue; creation may have already set the column
+    console.error('Error ensuring role column exists:', err.message || err);
+  }
 };
 
 const parseUserRow = (row) => ({
@@ -59,7 +67,7 @@ const addUser = async ({ name, email, passwordHash, role, phone, address, status
   return { id: result.rows[0].id, name, email: email.toLowerCase(), role: role || 'Customer' };
 };
 
-const updateUserById = async (id, { name, email, passwordHash }) => {
+const updateUserById = async (id, { name, email, passwordHash, role }) => {
   const fields = [];
   const values = [];
   let index = 1;
@@ -75,6 +83,10 @@ const updateUserById = async (id, { name, email, passwordHash }) => {
   if (passwordHash !== undefined) {
     fields.push(`password_hash = $${index++}`);
     values.push(passwordHash);
+  }
+  if (role !== undefined) {
+    fields.push(`role = $${index++}`);
+    values.push(role);
   }
 
   if (fields.length === 0) {
@@ -99,6 +111,12 @@ const toPublicUser = (user) => {
 const ensureAdminUser = async () => {
   const existing = await findUserByEmail(DB_ADMIN_EMAIL);
   if (existing) {
+    // If an existing user is present but not Admin, upgrade their role to Admin
+    if (existing.role !== 'Admin') {
+      const updated = await updateUserById(existing.id, { role: 'Admin' });
+      console.log(`✅ Updated existing admin account role to Admin: ${DB_ADMIN_EMAIL}`);
+      return updated;
+    }
     return existing;
   }
 
@@ -111,7 +129,8 @@ const ensureAdminUser = async () => {
   };
   const newUser = await addUser(adminUser);
   console.log(`✅ Seeded default admin account: ${DB_ADMIN_EMAIL}`);
-  return newUser;
+  // return the full user row
+  return findUserById(newUser.id);
 };
 
 const initialize = async () => {
