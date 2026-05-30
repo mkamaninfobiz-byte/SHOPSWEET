@@ -19,20 +19,18 @@ const register = async (req, res) => {
     return res.status(400).json({ error: 'Email already registered.' });
   }
 
-  const normalizedRole = role === 'Admin' ? 'Admin' : 'User';
-  const roles = [normalizedRole];
+  const normalizedRole = role === 'Admin' ? 'Admin' : 'Customer';
   const passwordHash = await bcrypt.hash(password, 10);
   const user = {
-    id: `U-${Date.now()}`,
     name,
     email,
     passwordHash,
-    roles,
+    role: normalizedRole,
   };
 
   await addUser(user);
 
-  const token = signToken({ id: user.id, email: user.email, roles: user.roles });
+  const token = signToken({ id: user.id, email: user.email, role: user.role });
   res.json({ token, user: toPublicUser(user) });
 };
 
@@ -52,7 +50,7 @@ const login = async (req, res) => {
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
 
-  const token = signToken({ id: user.id, email: user.email, roles: user.roles });
+  const token = signToken({ id: user.id, email: user.email, role: user.role });
   res.json({ token, user: toPublicUser(user) });
 };
 
@@ -100,7 +98,7 @@ const updateProfile = async (req, res) => {
   });
 
   const token = signToken({ id: updated.id, email: updated.email, roles: updated.roles });
-  res.json({ token, user: toPublicUser(updated) });
+  res.json({ token, user: toPublicUser(updated) });: updated.role
 };
 
 module.exports = { register, login, getMe, updateProfile };
