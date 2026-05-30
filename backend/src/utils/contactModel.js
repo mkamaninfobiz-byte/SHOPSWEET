@@ -80,8 +80,6 @@ const deleteContactById = async (id) => {
   return result.rowCount > 0;
 };
 
-initContactsTable().catch((error) => {
-  console.error('Failed to initialize contacts table:', error.message || error);
-});
+const initialize = initContactsTable;
 
-module.exports = { saveContact, getAllContacts, getContactById, updateContactById, deleteContactById };
+module.exports = { saveContact, getAllContacts, getContactById, updateContactById, deleteContactById, initialize };

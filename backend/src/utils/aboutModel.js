@@ -247,9 +247,7 @@ const updateStats = async (stats) => {
   return getAboutContent();
 };
 
-initAboutTable().catch((error) => {
-  console.error('Failed to initialize about table:', error.message || error);
-});
+const initialize = initAboutTable;
 
 module.exports = {
   getAboutContent,
@@ -258,4 +256,5 @@ module.exports = {
   updateWhyChoose,
   updateTeam,
   updateStats,
+  initialize,
 };

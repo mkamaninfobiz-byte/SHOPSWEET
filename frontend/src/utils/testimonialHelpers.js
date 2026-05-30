@@ -1,13 +1,14 @@
-/** Resolve stored paths to browser-loadable URLs (Vite proxies /uploads to backend). */
+import { resolveAssetUrl } from '../config/env';
+
 export const resolveTestimonialPhotoPath = (url) => {
   if (!url || typeof url !== 'string') return null;
   const trimmed = url.trim();
   if (!trimmed) return null;
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
-  if (trimmed.startsWith('/uploads/')) return trimmed;
-  if (trimmed.startsWith('/')) return trimmed;
-  if (trimmed.startsWith('uploads/')) return `/${trimmed}`;
-  return `/uploads/testimonials/${trimmed.replace(/^\/+/, '')}`;
+  if (trimmed.startsWith('/uploads/')) return resolveAssetUrl(trimmed);
+  if (trimmed.startsWith('/')) return resolveAssetUrl(trimmed);
+  if (trimmed.startsWith('uploads/')) return resolveAssetUrl(`/${trimmed}`);
+  return resolveAssetUrl(`/uploads/testimonials/${trimmed.replace(/^\/+/, '')}`);
 };
 
 export const normalizeTestimonialItem = (item) => {

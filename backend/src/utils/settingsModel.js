@@ -49,8 +49,6 @@ const saveSiteSettings = async ({ brandName, tagline, logoUrl }) => {
   return getSiteSettings();
 };
 
-initSettingsTable().catch((err) => {
-  console.error('Failed to initialize site_settings:', err.message || err);
-});
+const initialize = initSettingsTable;
 
-module.exports = { getSiteSettings, saveSiteSettings, DEFAULT_SETTINGS };
+module.exports = { getSiteSettings, saveSiteSettings, DEFAULT_SETTINGS, initialize };

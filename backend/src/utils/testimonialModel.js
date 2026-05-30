@@ -122,8 +122,6 @@ const updateTestimonials = async ({ sectionTitle, sectionSubtitle, items }) => {
   return getTestimonials();
 };
 
-initTestimonialTable().catch((err) => {
-  console.error('Failed to initialize testimonial_settings:', err.message || err);
-});
+const initialize = initTestimonialTable;
 
-module.exports = { getTestimonials, updateTestimonials };
+module.exports = { getTestimonials, updateTestimonials, initialize };

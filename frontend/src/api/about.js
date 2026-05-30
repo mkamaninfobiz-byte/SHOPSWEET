@@ -58,9 +58,7 @@ export const uploadTeamPhoto = async (file) => {
   try {
     const formData = new FormData();
     formData.append('photo', file);
-    const response = await api.post('/about/team/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post('/about/team/upload', formData);
     return response.data;
   } catch (error) {
     throw error.response?.data || error || { error: 'Failed to upload team photo' };

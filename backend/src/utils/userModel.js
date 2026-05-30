@@ -103,11 +103,10 @@ const ensureAdminUser = async () => {
   return adminUser;
 };
 
-initUsersTable()
-  .then(() => ensureAdminUser())
-  .catch((error) => {
-    console.error('Failed to initialize users table:', error.message || error);
-  });
+const initialize = async () => {
+  await initUsersTable();
+  await ensureAdminUser();
+};
 
 module.exports = {
   findUserByEmail,
@@ -116,4 +115,5 @@ module.exports = {
   updateUserById,
   toPublicUser,
   ensureAdminUser,
+  initialize,
 };

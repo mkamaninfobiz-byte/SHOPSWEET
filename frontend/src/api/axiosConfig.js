@@ -1,11 +1,10 @@
 import axios from 'axios';
-
-const baseURL = import.meta.env.VITE_API_URL || '/api';
+import { API_URL } from '../config/env';
 
 const api = axios.create({
-  baseURL,
+  baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
+  timeout: 20000,
 });
 
 api.interceptors.request.use((config) => {
@@ -24,7 +23,9 @@ api.interceptors.response.use(
   (error) => {
     if (!error?.response) {
       return Promise.reject({
-        error: 'Cannot reach the server. Start the backend (npm run dev in /backend) and refresh.',
+        error: import.meta.env.PROD
+          ? 'Cannot reach the server. Please try again in a moment.'
+          : 'Cannot reach the server. Start the backend (npm run dev in /backend) and refresh.',
         message: error?.message || 'Network error',
       });
     }

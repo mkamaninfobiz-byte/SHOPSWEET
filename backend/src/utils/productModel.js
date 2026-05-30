@@ -166,10 +166,6 @@ const addProduct = async ({ name, category, price, inventory, description, image
   return result.rows[0];
 };
 
-ensureProductsReady().catch((error) => {
-  console.error('Failed to prepare products catalog:', error.message || error);
-});
-
 module.exports = {
   ensureProductsReady,
   getAllProducts,

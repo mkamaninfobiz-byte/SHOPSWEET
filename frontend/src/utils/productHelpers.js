@@ -1,3 +1,5 @@
+import { resolveAssetUrl } from '../config/env';
+
 const defaultSweetImage =
   'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80';
 
@@ -14,9 +16,9 @@ export const isValidImageUrl = (value) => {
 export const getProductImageUrl = (item) => {
   const imageUrl = String(item?.image_url || item?.image || item?.imageUrl || '').trim();
   if (!imageUrl) return defaultSweetImage;
-  if (imageUrl.startsWith('/')) return imageUrl;
   if (isValidImageUrl(imageUrl)) return imageUrl;
-  return defaultSweetImage;
+  const resolved = resolveAssetUrl(imageUrl);
+  return resolved || defaultSweetImage;
 };
 
 export const getProductStatus = (item) => {
@@ -63,5 +65,7 @@ export const getApiErrorMessage = (err) => {
   if (typeof err === 'string') return err;
   if (err.error) return String(err.error);
   if (err.message) return String(err.message);
-  return 'Unable to connect to the server. Make sure the backend is running.';
+  return import.meta.env.PROD
+    ? 'Unable to connect to the server. Please try again later.'
+    : 'Unable to connect to the server. Make sure the backend is running.';
 };

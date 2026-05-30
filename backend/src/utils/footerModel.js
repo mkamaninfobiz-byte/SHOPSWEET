@@ -134,8 +134,6 @@ const updateFooterSettings = async (updates) => {
   return getFooterSettings();
 };
 
-initFooterTable().catch((err) => {
-  console.error('Failed to initialize footer_settings:', err.message || err);
-});
+const initialize = initFooterTable;
 
-module.exports = { getFooterSettings, updateFooterSettings };
+module.exports = { getFooterSettings, updateFooterSettings, initialize };

@@ -1,13 +1,12 @@
 require('dotenv').config();
-require('./config/db');
 const app = require('./app');
-const { ensureProductsReady } = require('./utils/productModel');
+const { initDatabase } = require('./config/initDatabase');
 
 const PORT = process.env.PORT || 4000;
 
 const startServer = async () => {
   try {
-    await ensureProductsReady();
+    await initDatabase();
     app.listen(PORT, () => {
       console.log(`ShopSweet backend running on http://localhost:${PORT}`);
     });

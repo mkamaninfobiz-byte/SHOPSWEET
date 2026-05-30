@@ -157,8 +157,6 @@ const deleteOrderById = async (id) => {
   return result.rowCount > 0;
 };
 
-initOrdersTable().catch((error) => {
-  console.error('Failed to initialize orders table:', error.message || error);
-});
+const initialize = initOrdersTable;
 
-module.exports = { addOrder, getAllOrders, getOrderById, updateOrderById, deleteOrderById };
+module.exports = { addOrder, getAllOrders, getOrderById, updateOrderById, deleteOrderById, initialize };
