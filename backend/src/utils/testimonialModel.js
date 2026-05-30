@@ -1,4 +1,4 @@
-const poolPromise = require('../config/db');
+const pool = require('../config/db');
 
 const defaultTestimonials = {
   sectionTitle: 'What Our Customers Say',
@@ -71,14 +71,11 @@ const parseRow = (row) => {
   };
 };
 
-const getPool = async () => poolPromise;
-
 const ensureRow = async () => {
-  const pool = await getPool();
-  const [rows] = await pool.query('SELECT id FROM testimonial_settings LIMIT 1');
-  if (!rows.length) {
+  const result = await pool.query('SELECT id FROM testimonial_settings LIMIT 1');
+  if (!result.rows.length) {
     await pool.query(
-      'INSERT INTO testimonial_settings (section_title, section_subtitle, items) VALUES (?, ?, ?)',
+      'INSERT INTO testimonial_settings (section_title, section_subtitle, items) VALUES ($1, $2, $3::json)',
       [
         defaultTestimonials.sectionTitle,
         defaultTestimonials.sectionSubtitle,
@@ -89,34 +86,31 @@ const ensureRow = async () => {
 };
 
 const initTestimonialTable = async () => {
-  const pool = await getPool();
   await pool.query(`
     CREATE TABLE IF NOT EXISTS testimonial_settings (
-      id INT PRIMARY KEY AUTO_INCREMENT,
+      id SERIAL PRIMARY KEY,
       section_title VARCHAR(255),
       section_subtitle TEXT,
       items JSON,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
   `);
   await ensureRow();
 };
 
 const getTestimonials = async () => {
   await initTestimonialTable();
-  const pool = await getPool();
-  const [rows] = await pool.query('SELECT * FROM testimonial_settings LIMIT 1');
-  return parseRow(rows[0]);
+  const result = await pool.query('SELECT * FROM testimonial_settings LIMIT 1');
+  return parseRow(result.rows[0]);
 };
 
 const updateTestimonials = async ({ sectionTitle, sectionSubtitle, items }) => {
   await initTestimonialTable();
-  const pool = await getPool();
   await pool.query(
     `UPDATE testimonial_settings SET
-      section_title = COALESCE(?, section_title),
-      section_subtitle = COALESCE(?, section_subtitle),
-      items = COALESCE(?, items),
+      section_title = COALESCE($1, section_title),
+      section_subtitle = COALESCE($2, section_subtitle),
+      items = COALESCE($3::json, items),
       updated_at = CURRENT_TIMESTAMP
     WHERE id = 1`,
     [

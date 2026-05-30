@@ -1,4 +1,4 @@
-const poolPromise = require('../config/db');
+const pool = require('../config/db');
 
 const DEFAULT_PRODUCTS = [
   {
@@ -39,39 +39,32 @@ const DEFAULT_PRODUCTS = [
   },
 ];
 
-const getPool = async () => {
-  const pool = await poolPromise;
-  return pool;
-};
-
 const initProductsTable = async () => {
-  const pool = await getPool();
   const sql = `
     CREATE TABLE IF NOT EXISTS products (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
       sku VARCHAR(50) NOT NULL UNIQUE,
       name VARCHAR(255) NOT NULL,
       category VARCHAR(100) NOT NULL,
-      price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-      inventory INT NOT NULL DEFAULT 0,
+      price NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+      inventory INTEGER NOT NULL DEFAULT 0,
       description TEXT,
       image_url VARCHAR(511) DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    );
   `;
   await pool.query(sql);
   await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url VARCHAR(511) DEFAULT NULL`);
 };
 
 const seedDefaultProductsIfEmpty = async () => {
-  const pool = await getPool();
-  const [rows] = await pool.query('SELECT COUNT(*) AS count FROM products');
-  const count = Number(rows[0]?.count || 0);
+  const result = await pool.query('SELECT COUNT(*) AS count FROM products');
+  const count = Number(result.rows[0]?.count || 0);
   if (count > 0) return count;
 
   for (const product of DEFAULT_PRODUCTS) {
     await pool.query(
-      'INSERT INTO products (sku, name, category, price, inventory, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO products (sku, name, category, price, inventory, description, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7)',
       [
         product.sku,
         product.name,
@@ -95,50 +88,48 @@ const ensureProductsReady = async () => {
 
 const getAllProducts = async () => {
   await ensureProductsReady();
-  const pool = await getPool();
-  const [rows] = await pool.query(
+  const result = await pool.query(
     'SELECT id, sku, name, category, price, inventory, description, image_url FROM products ORDER BY created_at DESC'
   );
-  return rows;
+  return result.rows;
 };
 
 const getProductById = async (id) => {
   await ensureProductsReady();
-  const pool = await getPool();
-  const [rows] = await pool.query(
-    'SELECT id, sku, name, category, price, inventory, description, image_url FROM products WHERE id = ?',
+  const result = await pool.query(
+    'SELECT id, sku, name, category, price, inventory, description, image_url FROM products WHERE id = $1',
     [id]
   );
-  return rows.length ? rows[0] : null;
+  return result.rows.length ? result.rows[0] : null;
 };
 
 const updateProductById = async (id, { name, category, price, inventory, description, imageUrl }) => {
-  const pool = await getPool();
   const fields = [];
   const values = [];
+  let index = 1;
 
   if (name !== undefined) {
-    fields.push('name = ?');
+    fields.push(`name = $${index++}`);
     values.push(name);
   }
   if (category !== undefined) {
-    fields.push('category = ?');
+    fields.push(`category = $${index++}`);
     values.push(category);
   }
   if (price !== undefined) {
-    fields.push('price = ?');
+    fields.push(`price = $${index++}`);
     values.push(parseFloat(price) || 0);
   }
   if (inventory !== undefined) {
-    fields.push('inventory = ?');
+    fields.push(`inventory = $${index++}`);
     values.push(parseInt(inventory, 10) || 0);
   }
   if (description !== undefined) {
-    fields.push('description = ?');
+    fields.push(`description = $${index++}`);
     values.push(description || null);
   }
   if (imageUrl !== undefined) {
-    fields.push('image_url = ?');
+    fields.push(`image_url = $${index++}`);
     values.push(imageUrl || null);
   }
 
@@ -147,21 +138,21 @@ const updateProductById = async (id, { name, category, price, inventory, descrip
   }
 
   values.push(id);
-  await pool.query(`UPDATE products SET ${fields.join(', ')} WHERE id = ?`, values);
+  await pool.query(`UPDATE products SET ${fields.join(', ')} WHERE id = $${index}`, values);
   return getProductById(id);
 };
 
 const deleteProductById = async (id) => {
-  const pool = await getPool();
-  const [result] = await pool.query('DELETE FROM products WHERE id = ?', [id]);
-  return result.affectedRows > 0;
+  const result = await pool.query('DELETE FROM products WHERE id = $1', [id]);
+  return result.rowCount > 0;
 };
 
 const addProduct = async ({ name, category, price, inventory, description, imageUrl }) => {
-  const pool = await getPool();
   const sku = `PRD-${Date.now()}`;
-  const [result] = await pool.query(
-    'INSERT INTO products (sku, name, category, price, inventory, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)',
+  const result = await pool.query(
+    `INSERT INTO products (sku, name, category, price, inventory, description, image_url)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id, sku, name, category, price, inventory, description, image_url`,
     [
       sku,
       name,
@@ -172,11 +163,7 @@ const addProduct = async ({ name, category, price, inventory, description, image
       imageUrl || null,
     ]
   );
-  const [rows] = await pool.query(
-    'SELECT id, sku, name, category, price, inventory, description, image_url FROM products WHERE id = ?',
-    [result.insertId]
-  );
-  return rows[0];
+  return result.rows[0];
 };
 
 ensureProductsReady().catch((error) => {

@@ -1,4 +1,4 @@
-const poolPromise = require('../config/db');
+const pool = require('../config/db');
 
 const defaultAboutContent = {
   heading: 'Pure. Authentic. Celebration',
@@ -79,10 +79,6 @@ const defaultAboutContent = {
   ],
 };
 
-const getPool = async () => {
-  return poolPromise;
-};
-
 const parseJsonArray = (value, fallback = []) => {
   if (value == null || value === '') return fallback;
   if (Array.isArray(value)) return value;
@@ -132,11 +128,11 @@ const parseAboutRow = (row) => {
 };
 
 const ensureAboutRow = async () => {
-  const pool = await getPool();
-  const [rows] = await pool.query('SELECT id FROM about LIMIT 1');
-  if (rows.length === 0) {
+  const result = await pool.query('SELECT id FROM about LIMIT 1');
+  if (result.rows.length === 0) {
     await pool.query(
-      'INSERT INTO about (heading, tagline, story, commitment, core_values, why_choose, stats, team) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      `INSERT INTO about (heading, tagline, story, commitment, core_values, why_choose, stats, team)
+       VALUES ($1, $2, $3, $4, $5::json, $6::json, $7::json, $8::json)`,
       [
         defaultAboutContent.heading,
         defaultAboutContent.tagline,
@@ -152,10 +148,9 @@ const ensureAboutRow = async () => {
 };
 
 const initAboutTable = async () => {
-  const pool = await getPool();
   const createSql = `
     CREATE TABLE IF NOT EXISTS about (
-      id INT PRIMARY KEY AUTO_INCREMENT,
+      id SERIAL PRIMARY KEY,
       heading VARCHAR(255),
       tagline VARCHAR(255),
       story TEXT,
@@ -164,39 +159,38 @@ const initAboutTable = async () => {
       why_choose JSON,
       stats JSON,
       team JSON,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `;
   await pool.query(createSql);
   await ensureAboutRow();
 };
 
 const getAboutContent = async () => {
-  const pool = await getPool();
   await ensureAboutRow();
-  const [rows] = await pool.query('SELECT * FROM about LIMIT 1');
-  return parseAboutRow(rows[0]);
+  const result = await pool.query('SELECT * FROM about LIMIT 1');
+  return parseAboutRow(result.rows[0]);
 };
 
 const updateAboutContent = async (updates) => {
-  const pool = await getPool();
   const fields = [];
   const values = [];
+  let index = 1;
 
   if (updates.heading !== undefined) {
-    fields.push('heading = ?');
+    fields.push(`heading = $${index++}`);
     values.push(updates.heading);
   }
   if (updates.tagline !== undefined) {
-    fields.push('tagline = ?');
+    fields.push(`tagline = $${index++}`);
     values.push(updates.tagline);
   }
   if (updates.story !== undefined) {
-    fields.push('story = ?');
+    fields.push(`story = $${index++}`);
     values.push(updates.story);
   }
   if (updates.commitment !== undefined) {
-    fields.push('commitment = ?');
+    fields.push(`commitment = $${index++}`);
     values.push(updates.commitment);
   }
 
@@ -210,19 +204,22 @@ const updateAboutContent = async (updates) => {
 };
 
 const updateCoreValues = async (values) => {
-  const pool = await getPool();
-  await pool.query('UPDATE about SET core_values = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [JSON.stringify(values)]);
+  await pool.query(
+    'UPDATE about SET core_values = $1::json, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
+    [JSON.stringify(values)]
+  );
   return getAboutContent();
 };
 
 const updateWhyChoose = async (items) => {
-  const pool = await getPool();
-  await pool.query('UPDATE about SET why_choose = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [JSON.stringify(items)]);
+  await pool.query(
+    'UPDATE about SET why_choose = $1::json, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
+    [JSON.stringify(items)]
+  );
   return getAboutContent();
 };
 
 const updateTeam = async (members) => {
-  const pool = await getPool();
   const normalized = (members || []).map((member, index) => ({
     id: member.id || `team-${index + 1}`,
     name: String(member.name || '').trim(),
@@ -230,22 +227,23 @@ const updateTeam = async (members) => {
     desc: String(member.desc || member.description || '').trim(),
     image_url: member.image_url || member.imageUrl || null,
   }));
-  await pool.query('UPDATE about SET team = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [
-    JSON.stringify(normalized),
-  ]);
+  await pool.query(
+    'UPDATE about SET team = $1::json, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
+    [JSON.stringify(normalized)]
+  );
   return getAboutContent();
 };
 
 const updateStats = async (stats) => {
-  const pool = await getPool();
   const normalized = (stats || []).map((item, index) => ({
     id: item.id || `stat-${index + 1}`,
     number: String(item.number ?? item.value ?? '').trim(),
     label: String(item.label ?? '').trim(),
   }));
-  await pool.query('UPDATE about SET stats = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [
-    JSON.stringify(normalized),
-  ]);
+  await pool.query(
+    'UPDATE about SET stats = $1::json, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
+    [JSON.stringify(normalized)]
+  );
   return getAboutContent();
 };
 

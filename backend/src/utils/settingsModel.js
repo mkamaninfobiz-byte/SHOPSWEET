@@ -1,4 +1,4 @@
-const poolPromise = require('../config/db');
+const pool = require('../config/db');
 
 const DEFAULT_SETTINGS = {
   brandName: 'ShopSweet',
@@ -6,36 +6,29 @@ const DEFAULT_SETTINGS = {
   logoUrl: null,
 };
 
-const getPool = async () => {
-  const pool = await poolPromise;
-  return pool;
-};
-
 const initSettingsTable = async () => {
-  const pool = await getPool();
   await pool.query(`
     CREATE TABLE IF NOT EXISTS site_settings (
-      id TINYINT PRIMARY KEY DEFAULT 1,
+      id SMALLINT PRIMARY KEY DEFAULT 1,
       brand_name VARCHAR(120) DEFAULT 'ShopSweet',
       tagline VARCHAR(255) DEFAULT 'Fresh mithai for every celebration',
       logo_url VARCHAR(500) DEFAULT NULL,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `);
-  const [rows] = await pool.query('SELECT id FROM site_settings WHERE id = 1');
-  if (!rows.length) {
+  const result = await pool.query('SELECT id FROM site_settings WHERE id = 1');
+  if (!result.rows.length) {
     await pool.query(
-      'INSERT INTO site_settings (id, brand_name, tagline, logo_url) VALUES (1, ?, ?, NULL)',
+      'INSERT INTO site_settings (id, brand_name, tagline, logo_url) VALUES (1, $1, $2, NULL)',
       [DEFAULT_SETTINGS.brandName, DEFAULT_SETTINGS.tagline]
     );
   }
 };
 
 const getSiteSettings = async () => {
-  const pool = await getPool();
-  const [rows] = await pool.query('SELECT * FROM site_settings WHERE id = 1 LIMIT 1');
-  if (!rows.length) return { ...DEFAULT_SETTINGS };
-  const row = rows[0];
+  const result = await pool.query('SELECT * FROM site_settings WHERE id = 1 LIMIT 1');
+  if (!result.rows.length) return { ...DEFAULT_SETTINGS };
+  const row = result.rows[0];
   return {
     brandName: row.brand_name || DEFAULT_SETTINGS.brandName,
     tagline: row.tagline || DEFAULT_SETTINGS.tagline,
@@ -44,10 +37,9 @@ const getSiteSettings = async () => {
 };
 
 const saveSiteSettings = async ({ brandName, tagline, logoUrl }) => {
-  const pool = await getPool();
   const current = await getSiteSettings();
   await pool.query(
-    `UPDATE site_settings SET brand_name = ?, tagline = ?, logo_url = ? WHERE id = 1`,
+    `UPDATE site_settings SET brand_name = $1, tagline = $2, logo_url = $3, updated_at = CURRENT_TIMESTAMP WHERE id = 1`,
     [
       brandName ?? current.brandName,
       tagline ?? current.tagline,

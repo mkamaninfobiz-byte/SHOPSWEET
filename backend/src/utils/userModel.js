@@ -1,16 +1,10 @@
 const bcrypt = require('bcryptjs');
-const poolPromise = require('../config/db');
+const pool = require('../config/db');
 
 const DB_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL || 'admin@shopsweet.local';
 const DB_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || 'Admin123!';
 
-const getPool = async () => {
-  const pool = await poolPromise;
-  return pool;
-};
-
 const initUsersTable = async () => {
-  const pool = await getPool();
   const sql = `
     CREATE TABLE IF NOT EXISTS users (
       id VARCHAR(50) PRIMARY KEY,
@@ -19,7 +13,7 @@ const initUsersTable = async () => {
       password_hash VARCHAR(255) NOT NULL,
       roles TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    );
   `;
   await pool.query(sql);
 };
@@ -34,43 +28,40 @@ const parseUserRow = (row) => ({
 });
 
 const findUserByEmail = async (email) => {
-  const pool = await getPool();
-  const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
-  if (!rows || rows.length === 0) return null;
-  return parseUserRow(rows[0]);
+  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+  if (!result.rows || result.rows.length === 0) return null;
+  return parseUserRow(result.rows[0]);
 };
 
 const findUserById = async (id) => {
-  const pool = await getPool();
-  const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
-  if (!rows || rows.length === 0) return null;
-  return parseUserRow(rows[0]);
+  const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+  if (!result.rows || result.rows.length === 0) return null;
+  return parseUserRow(result.rows[0]);
 };
 
 const addUser = async ({ id, name, email, passwordHash, roles }) => {
-  const pool = await getPool();
   await pool.query(
-    'INSERT INTO users (id, name, email, password_hash, roles) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO users (id, name, email, password_hash, roles) VALUES ($1, $2, $3, $4, $5)',
     [id, name, email.toLowerCase(), passwordHash, JSON.stringify(roles || ['User'])]
   );
   return { id, name, email: email.toLowerCase(), roles: roles || ['User'] };
 };
 
 const updateUserById = async (id, { name, email, passwordHash }) => {
-  const pool = await getPool();
   const fields = [];
   const values = [];
+  let index = 1;
 
   if (name !== undefined) {
-    fields.push('name = ?');
+    fields.push(`name = $${index++}`);
     values.push(name);
   }
   if (email !== undefined) {
-    fields.push('email = ?');
+    fields.push(`email = $${index++}`);
     values.push(email.toLowerCase());
   }
   if (passwordHash !== undefined) {
-    fields.push('password_hash = ?');
+    fields.push(`password_hash = $${index++}`);
     values.push(passwordHash);
   }
 
@@ -79,7 +70,7 @@ const updateUserById = async (id, { name, email, passwordHash }) => {
   }
 
   values.push(id);
-  await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+  await pool.query(`UPDATE users SET ${fields.join(', ')} WHERE id = $${index}`, values);
   return findUserById(id);
 };
 

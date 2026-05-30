@@ -1,10 +1,5 @@
-const poolPromise = require('../config/db');
+const pool = require('../config/db');
 const { getAllOrders } = require('./orderModel');
-
-const getPool = async () => {
-  const pool = await poolPromise;
-  return pool;
-};
 
 const parseItems = (raw) => {
   if (!raw) return [];
@@ -17,10 +12,8 @@ const parseItems = (raw) => {
 };
 
 const getDashboardStats = async () => {
-  const pool = await getPool();
-
-  const [[productRow]] = await pool.query('SELECT COUNT(*) AS count FROM products');
-  const productCount = Number(productRow?.count || 0);
+  const productResult = await pool.query('SELECT COUNT(*) AS count FROM products');
+  const productCount = Number(productResult.rows[0]?.count || 0);
 
   const orders = await getAllOrders();
   const orderCount = orders.length;
@@ -73,13 +66,12 @@ const searchDashboard = async (query, limit = 8) => {
   const q = String(query || '').trim().toLowerCase();
   if (!q) return { products: [], orders: [], customers: [] };
 
-  const pool = await getPool();
   const like = `%${q}%`;
 
-  const [productRows] = await pool.query(
+  const productResult = await pool.query(
     `SELECT id, sku, name, category, price, image_url FROM products
-     WHERE LOWER(name) LIKE ? OR LOWER(category) LIKE ? OR LOWER(sku) LIKE ?
-     ORDER BY name ASC LIMIT ?`,
+     WHERE LOWER(name) LIKE $1 OR LOWER(category) LIKE $2 OR LOWER(sku) LIKE $3
+     ORDER BY name ASC LIMIT $4`,
     [like, like, like, limit]
   );
 
@@ -132,7 +124,7 @@ const searchDashboard = async (query, limit = 8) => {
   const customers = Array.from(customerMap.values()).slice(0, limit);
 
   return {
-    products: productRows.map((p) => ({
+    products: productResult.rows.map((p) => ({
       id: p.id || p.sku,
       sku: p.sku,
       name: p.name,

@@ -1,4 +1,4 @@
-const poolPromise = require('../config/db');
+const pool = require('../config/db');
 
 const defaultFooter = {
   brandName: 'ShopSweet',
@@ -48,16 +48,13 @@ const parseRow = (row) => {
   };
 };
 
-const getPool = async () => poolPromise;
-
 const ensureRow = async () => {
-  const pool = await getPool();
-  const [rows] = await pool.query('SELECT id FROM footer_settings LIMIT 1');
-  if (!rows.length) {
+  const result = await pool.query('SELECT id FROM footer_settings LIMIT 1');
+  if (!result.rows.length) {
     await pool.query(
       `INSERT INTO footer_settings (
         brand_name, tagline, description, quick_links, address, phone, email, copyright_text, bottom_tagline
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES ($1, $2, $3, $4::json, $5, $6, $7, $8, $9)`,
       [
         defaultFooter.brandName,
         defaultFooter.tagline,
@@ -74,10 +71,9 @@ const ensureRow = async () => {
 };
 
 const initFooterTable = async () => {
-  const pool = await getPool();
   await pool.query(`
     CREATE TABLE IF NOT EXISTS footer_settings (
-      id INT PRIMARY KEY AUTO_INCREMENT,
+      id SERIAL PRIMARY KEY,
       brand_name VARCHAR(120),
       tagline VARCHAR(255),
       description TEXT,
@@ -87,24 +83,23 @@ const initFooterTable = async () => {
       email VARCHAR(150),
       copyright_text VARCHAR(255),
       bottom_tagline VARCHAR(255),
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
   `);
   await ensureRow();
 };
 
 const getFooterSettings = async () => {
   await initFooterTable();
-  const pool = await getPool();
-  const [rows] = await pool.query('SELECT * FROM footer_settings LIMIT 1');
-  return parseRow(rows[0]);
+  const result = await pool.query('SELECT * FROM footer_settings LIMIT 1');
+  return parseRow(result.rows[0]);
 };
 
 const updateFooterSettings = async (updates) => {
   await initFooterTable();
-  const pool = await getPool();
   const fields = [];
   const values = [];
+  let index = 1;
 
   const map = {
     brandName: 'brand_name',
@@ -119,13 +114,13 @@ const updateFooterSettings = async (updates) => {
 
   Object.entries(map).forEach(([key, col]) => {
     if (updates[key] !== undefined) {
-      fields.push(`${col} = ?`);
+      fields.push(`${col} = $${index++}`);
       values.push(updates[key]);
     }
   });
 
   if (updates.quickLinks !== undefined) {
-    fields.push('quick_links = ?');
+    fields.push(`quick_links = $${index++}::json`);
     values.push(JSON.stringify(updates.quickLinks));
   }
 
