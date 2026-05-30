@@ -98,7 +98,7 @@ const updateProfile = async (req, res) => {
   });
 
   const token = signToken({ id: updated.id, email: updated.email, roles: updated.roles });
-  res.json({ token, user: toPublicUser(updated) });: updated.role
+  res.json({ token, user: toPublicUser(updated) });
 };
 
 module.exports = { register, login, getMe, updateProfile };
