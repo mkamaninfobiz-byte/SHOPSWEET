@@ -112,8 +112,6 @@ const ensureAdminUser = async () => {
   const newUser = await addUser(adminUser);
   console.log(`✅ Seeded default admin account: ${DB_ADMIN_EMAIL}`);
   return newUser;
-  console.log(`✅ Seeded default admin account: ${DB_ADMIN_EMAIL}`);
-  return adminUser;
 };
 
 const initialize = async () => {

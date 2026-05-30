@@ -36,16 +36,23 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+  console.log(`Login attempt for email: ${email}`);
   if (!email || !password) {
+    console.log('Login failed: Missing email or password.');
     return res.status(400).json({ error: 'Please provide email and password.' });
   }
 
   const user = await findUserByEmail(email);
+  console.log("USER:", user);
+  console.log("passwordHash:", user?.passwordHash);
+  console.log("password_hash:", user?.password_hash);
   if (!user || !user.passwordHash) {
+    console.log(`Login failed for ${email}: User not found or no password hash.`);
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
 
   const validPassword = await bcrypt.compare(password, user.passwordHash);
+  console.log(`Login for ${email}: Password comparison result: ${validPassword}`);
   if (!validPassword) {
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
